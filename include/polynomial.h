@@ -1,6 +1,5 @@
 #pragma once
 #include "list.h"
-#include "Translator.h"
 #include <cmath>
 
 
