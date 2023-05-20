@@ -53,7 +53,7 @@ public:
 		};
 
 		bool operator==(const iterator& it2) {
-			return !(this != it2);
+			return !(*this != it2);
 		};
 
 		T& operator*() {
@@ -65,11 +65,11 @@ public:
 		};
 	};
 
-	iterator begin() {
-		return first;
+	 iterator begin() const {
+		return iterator(first);
 	};
 
-	iterator end() {
+	 iterator end() const {
 		return nullptr;
 	};
 
@@ -85,7 +85,7 @@ public:
 
 	List() :first(nullptr) {}
 
-	List(const List& list) {
+	List(const List<T>& list) {
 		Node<T>* lptr = list.first;
 		if (!list.first)
 			return;
@@ -141,6 +141,14 @@ public:
 		return *this;
 	};
 
+	T& operator[](size_t n) const {
+		Node<T>* it = first;
+		for (int i = 0; i < n; i++) {
+			it = it->next;
+		}
+		return it->elem;
+	}
+
 	T& operator[](size_t n) {
 		Node<T>* it = first;
 		for (int i = 0; i < n; i++) {
@@ -167,7 +175,7 @@ public:
 		return true;
 	};
 
-	size_t size() {
+	size_t size() const {
 		Node<T>* tmp = first;
 		size_t count = 0;
 		while (tmp) {
@@ -177,14 +185,23 @@ public:
 		return count;
 	};
 
-	Node<T>* get_first() { return this->first; }
+	Node<T>* get_first() const { return this->first; }
 
-	Node<T>* get_last() { return this->last; }
+	Node<T>* get_last() const { return this->last; }
 
 	Node<T>* get_node(size_t pos) {
 		Node<T>* tmp = first;
 		for (int i = 0; i < pos; i++) tmp = tmp->next;
 		return tmp;
+	}
+
+	void pop_front() {
+		if (first) {
+			Node<T>* tmp = first;
+			if (last == first) last = nullptr;
+			first = first->next;
+			delete tmp;
+		}
 	}
 
 	void clear() {
@@ -215,18 +232,34 @@ public:
 			curr->next = curr->next->next;
 			delete curr;
 		}
-	};
-
-
-	void merge(List& list) {
-		if (last) {
-			last->next = list.first;
-			list.first = nullptr;
+		else if (tmp->next) {
+			while (tmp->next != curr) {
+				tmp = tmp->next;
+			}
+			last = tmp;
+			tmp->next = nullptr;
+			delete curr;
 		}
 		else {
-			first = list.first;
-			list.first = nullptr;
+			first = nullptr;
+			last = nullptr;
+			delete curr;
 		}
+	};
+
+	List merge(const List& list) const {
+		List res(*this);
+		List temp(list);
+		if (res.last) {
+			res.last->next = temp.first;
+			temp.first = nullptr;
+		}
+		else {
+			res.first = temp.first;
+			temp.first = nullptr;
+		}  
+		temp.first = temp.last = nullptr;
+		return res;
 	};
 
 	//void sort();		// O(n log n)	merge sort task12
@@ -275,6 +308,10 @@ public:
 		std::cout << std::endl;
 		this->reverse;
 	};
+
+	T front() const { return first->elem; }
+
+	T front() { return first->elem; }
 
 	std::vector<T> middle() {
 		Node<T>* tmp1 = first;
@@ -331,7 +368,7 @@ public:
 		Node<T>* ptr1 = first;
 		Node<T>* ptr2 = list.first;
 		while (ptr1 && ptr2) {
-			if (ptr1->elem <= ptr2->elem) {
+			if (ptr1->elem >= ptr2->elem) {
 				l.push_back(ptr1->elem);
 				ptr1 = ptr1->next;
 			}
@@ -463,6 +500,7 @@ public:
 	}
 
 	void merge_sort() {
+		if (!first) return;
 		if (!first->next) return;
 		else {
 			Node<T>* center = first;

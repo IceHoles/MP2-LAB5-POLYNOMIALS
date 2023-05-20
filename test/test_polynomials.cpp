@@ -59,19 +59,47 @@ TEST(polynomial, test_monomial_multiplication) {
 	monomial c2 = a2 * b2;
 	monomial res2(0, 0, 0, 0);
 
+	monomial a3(5, 3, 2, 1);
+	monomial c3 = a3 * 2;
+	monomial res3(10, 3, 2, 1);
 	EXPECT_EQ(true, c1 == res1);
 	EXPECT_EQ(true, c == res);
 	EXPECT_EQ(true, c2 == res2);
+	EXPECT_EQ(true, c3 == res3);
 }
 
 TEST(polynomial, test_polynomial_diff) {
-	
+	polynomial p{ monomial(9, 3, 3, 3), monomial(1, 2, 3, 0), monomial(12, 2, 1, 3), monomial(-1, 0, 0, 1) };
+	p.diff('x');
+	polynomial res{ monomial(27, 2, 3, 3), monomial(2, 1, 3, 0), monomial(24, 1, 1, 3) };
 }
 
-//template <class T>
-//class Table_with_same_types : public ::testing::Test {
-//	static T _shared;
-//	T value_;
-//};
-//
-//using MyTypes = ::testing::Types<unsigned int, int, char, polynomial, long>;
+TEST(polynomial, test_polynomial_integ) {
+	polynomial p{ monomial(9, 3, 3, 3), monomial(1, 2, 3, 0), monomial(12, 2, 1, 3), monomial(-1, 0, 0, 1) };
+	p.integ('x');
+	polynomial res{ monomial(2.25, 4, 3, 3), monomial(1/3, 3, 3, 0), monomial(4, 3, 1, 3),  monomial(-1, 1, 0, 1) };
+}
+
+TEST(polynomial, test_polynomial_add) {
+	polynomial p1{ monomial(9, 3, 3, 3), monomial(1, 2, 3, 0), monomial(12, 2, 1, 3), monomial(-1, 0, 0, 1) };
+	polynomial p2{ monomial(5, 3, 3, 3), monomial(-2, 2, 3, 0), monomial(4, 2, 1, 3), monomial(3, 1, 2, 1) };
+	polynomial expected{ monomial(14, 3, 3, 3), monomial(-1, 2, 3, 0), monomial(16, 2, 1, 3), monomial(3, 1, 2, 1), monomial(-1, 0, 0, 1) };
+	polynomial result = p1 + p2;
+	EXPECT_EQ(result, expected);
+}
+
+TEST(polynomial, test_polynomial_mult) {
+	polynomial p1{ monomial(2, 2, 0, 0), monomial(-3, 1, 0, 0), monomial(1, 0, 0, 0) };
+	polynomial p2{ monomial(1, 1, 0, 0), monomial(2, 0, 0, 0) };
+	polynomial expected{ monomial(2, 3, 0, 0), monomial(1, 2, 0, 0), monomial(-5, 1, 0, 0), monomial(2, 0, 0, 0) };
+	polynomial result = p1 * p2;
+	EXPECT_EQ(result, expected);
+}
+
+TEST(polynomial, test_polynomial_div) {
+	polynomial dividend{ monomial(2, 2, 0, 0), monomial(-3, 1, 0, 0), monomial(1, 0, 0, 0) };
+	polynomial divisor{ monomial(1, 1, 0, 0), monomial(2, 0, 0, 0) };
+	polynomial expected{ monomial(2, 1, 0, 0), monomial(-7, 0, 0, 0) };
+	polynomial result = dividend / divisor;
+	EXPECT_EQ(result, expected);
+}

@@ -13,22 +13,31 @@ public:
 	TOrderedTab1e() = default;
 	size_t size() const noexcept { return data.size(); }
 	TValue& operator[](size_t pos) {
-		return data[pos].pvalue;
+		return this[pos].value;
 	}
 	
 	void Delete(TKey key) {
-		if (data[key]) data.erase(data[key]);
-		return;
+		auto it = std::lower_bound(data.begin(), data.end(), key, [](const TTab1eRec& r, const TKey& k) { return r.key < k; });
+		if (it != data.end() && it->key == key) data.erase(it);
 	}
 
 	TValue* operator[](TKey key) {
-		auto it = std::lower_bound(data.begin(), data.end(), key);
-		if (it.key == key) return it;
+		auto comp = [](const TTab1eRec& r, const TKey& k) { return r.key < k; };
+		auto it = std::lower_bound(data.begin(), data.end(), key, comp);
+		if (it != data.end() && it->key == key) {
+			return &it->value;
+		}
 		return nullptr;
 	}
 
 	void Insert(TKey key, TValue value) {
-		if (data[key]) return;
-		data.insert(std::lower_bound(data.begin(), data.end(), key), { key, value });
+		auto comp = [](const TTab1eRec& r, const TKey& k) { return r.key < k; };
+		auto it = std::lower_bound(data.begin(), data.end(), key, comp);
+		if (it != data.end() && it->key == key) {
+			it->value = value;  // Update value of existing element
+		}
+		else {
+			data.insert(it, { key, value });  // Insert new element
+		}
 	}
 };

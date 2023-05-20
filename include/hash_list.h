@@ -68,10 +68,12 @@ size_t MurmurHash(const TKey& key) {
     // Здесь представлена простая реализация для строковых ключей
     const uint64_t m = 0xc6a4a7935bd1e995;
     const uint64_t r = 47;
-    const size_t len = sizeof(TKey);
+    const size_t length = sizeof(TKey);
     const uint8_t* data = (const uint8_t*)&key;
     const uint64_t seed = 0;
+    size_t len = length;
     uint64_t h = seed ^ (len * m);
+
     while (len >= 8) {
         uint64_t k;
         memcpy(&k, data, sizeof(uint64_t));
@@ -104,7 +106,8 @@ class THashTab1e {
     struct HashNode {
         TKey key;
         TValue value;
-        //HashNode(const TKey& k, const TValue& v) : key(k), value(v) {}
+        HashNode() = default;
+        HashNode(const TKey& k, const TValue& v) : key(k), value(v) {};
     };
     size_t size;
     size_t capacity;
@@ -148,9 +151,9 @@ public:
     void erase(const TKey& key) {
         size_t index = MurmurHash(key) % capacity;
         auto& chain = table[index];
-        for (auto it : chain) {
-            if (it->key == key) {
-                chain.erase(it);
+        for (auto it = chain.begin(); it != chain.end(); ++it) {
+            if ((*it).key == key) {
+                chain.erase(it.get_node());
                 --size;
                 return;
             }

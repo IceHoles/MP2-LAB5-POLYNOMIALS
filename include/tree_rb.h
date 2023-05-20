@@ -71,12 +71,11 @@ class TSearchTreeTab1e {
 		x->pParent = y;
 	}
 
-	// Essentialy a print() function
-	void InorderTraversalHelper(TNode* node) {
-		if (node != nullptr) {
-			InorderTraversalHelper(node->pLeft);
-			std::cout << node->data.key << ": " << node->data.value << std::endl;
-			InorderTraversalHelper(node->pRight);
+	void InorderTraversalHelper(TNode* pNode, std::stringstream& ss) {
+		if (pNode != nullptr) {
+			InorderTraversalHelper(pNode->pLeft, ss);
+			ss << pNode->data.key << ": " << pNode->data.value << "\n";
+			InorderTraversalHelper(pNode->pRight, ss);
 		}
 	}
 
@@ -122,87 +121,81 @@ class TSearchTreeTab1e {
 		pRoot->color = BLACK;
 	}
 
-	// The `Delete` function works by first finding the node to delete using the `FindNode` function.
-	//If the key is not found, the function returns immediately without doing anything.
-	//Otherwise, the function saves a pointer to the node to be deleted as `z`,and it saves a pointer to its child node as `x`.
-	//If `z` has only one child, the function calls the `Transplant` function to replace `z` with `x`.
-	//If `z` has two children, the function finds the successor node `y` 
-	//(i.e., the node with the smallest key in the right subtree of `z`), saves a pointer to `y`'s right child as `x`,
-	//and replaces `z` with `y` using the `Transplant` function.
-	//Then, the function copies `z`'s data into `y`,and updates `y`'s left child to be `z`'s left child.
-	//If `y` is not a direct child of `z`, the function updates `y`'s right child to be `z`'s right child, 
-	//and updates the parent pointer of `x` to point to `y`.
-	//Finally, if the original color of `y` was black, the function calls `FixDelete` to restore
-	//the properties of the Red - Black Tree.
-	//The `FixDelete` function works by repeatedly performing rotations and color flips on the nodes in the path
-	//from `x` to the root of the tree until the Red - Black Tree properties are restored.
-
 	void FixDelete(TNode* x) {
-		while (x != pRoot && x->isRed == false) {
+		while (x != pRoot && x->color == BLACK) {
 			if (x == x->pParent->pLeft) {
 				TNode* w = x->pParent->pRight;
-				if (w->isRed) {
-					w->isRed = false;
-					x->pParent->isRed = true;
+				if (w->color == RED) {
+					w->color = BLACK;
+					x->pParent->color = RED;
 					RotateLeft(x->pParent);
 					w = x->pParent->pRight;
 				}
-				if (w->pLeft->isRed == false && w->pRight->isRed == false) {
-					w->isRed = true;
+				if (w->pLeft->color == BLACK && w->pRight->color == BLACK) {
+					w->color = RED;
 					x = x->pParent;
 				}
 				else {
-					if (w->pRight->isRed == false) {
-						w->pLeft->isRed = false;
-						w->isRed = true;
+					if (w->pRight->color == BLACK) {
+						w->pLeft->color = BLACK;
+						w->color = RED;
 						RotateRight(w);
 						w = x->pParent->pRight;
 					}
-					w->isRed = x->pParent->isRed;
-					x->pParent->isRed = false;
-					w->pRight->isRed = false;
+					w->color = x->pParent->color;
+					x->pParent->color = BLACK;
+					w->pRight->color = BLACK;
 					RotateLeft(x->pParent);
 					x = pRoot;
 				}
 			}
 			else {
 				TNode* w = x->pParent->pLeft;
-				if (w->isRed) {
-					w->isRed = false;
-					x->pParent->isRed = true;
+				if (w->color == RED) {
+					w->color = BLACK;
+					x->pParent->color = RED;
 					RotateRight(x->pParent);
 					w = x->pParent->pLeft;
 				}
-				if (w->pRight->is   false && w->pLeft->isRed == false) {
-					w->isRed = true;
+				if (w->pRight->color == BLACK && w->pLeft->color == BLACK) {
+					w->color = RED;
 					x = x->pParent;
 				}
 				else {
-					if (w->pLeft->isRed == false) {
-						w->pRight->isRed = false;
-						w->isRed = true;
+					if (w->pLeft->color == BLACK) {
+						w->pRight->color = BLACK;
+						w->color = RED;
 						RotateLeft(w);
 						w = x->pParent->pLeft;
 					}
-					w->isRed = x->pParent->isRed;
-					x->pParent->isRed = false;
-					w->pLeft->isRed = false;
+					w->color = x->pParent->color;
+					x->pParent->color = BLACK;
+					w->pLeft->color = BLACK;
 					RotateRight(x->pParent);
 					x = pRoot;
 				}
 			}
 		}
-		x->isRed = false;
+		x->color = BLACK;
 	}
 
+	void Transplant(TNode* u, TNode* v) {
+		if (u->pParent == nullptr) {
+			pRoot = v;
+		}
+		else if (u == u->pParent->pLeft) {
+			u->pParent->pLeft = v;
+		}
+		else {
+			u->pParent->pRight = v;
+		}
+		if (v != nullptr) {
+			v->pParent = u->pParent;
+		}
+	}
 public:
 
 	TSearchTreeTab1e() : pRoot(nullptr) {}
-
-	void Print() {
-		std::cout << "Table\n";
-		Print(pRoot);
-	}
 
 	TValue* Find(TKey key) {				  
 		TNode* pNode = FindNode(key, pRoot);
@@ -217,7 +210,12 @@ public:
 		TNode* x = pRoot;
 		while (x != nullptr) {
 			y = x;
-			if (z->data.key < x->data.key) {
+			if (z->data.key == x->data.key) {
+				x->data.value = z->data.value;
+				delete z;
+				return;
+			}
+			else if (z->data.key < x->data.key) {
 				x = x->pLeft;
 			}
 			else {
@@ -237,46 +235,64 @@ public:
 		FixInsert(z);
 	}
 
-	void InorderTraversal() {
-		InorderTraversalHelper(pRoot);
+	//void InorderTraversal() {
+	//	InorderTraversalHelper(pRoot);
+	//}
+
+	std::stringstream InorderTraversal() {
+		std::stringstream ss;
+		InorderTraversalHelper(pRoot, ss);
+		return ss;
 	}
 
 	void Delete(const TKey& key) {
-		TNode* z = FindNode(key);
+		TNode* z = FindNode(key,pRoot);
 		if (z == nullptr) {
 			return; // key not found, nothing to delete
 		}
 		TNode* x = nullptr;
-		TNode* y = z;
-		bool yOriginalColor = y->isRed;
-		if (z->pLeft == nullptr) {
-			x = z->pRight;
-			Transplant(z, z->pRight);
-		}
-		else if (z->pRight == nullptr) {
-			x = z->pLeft;
-			Transplant(z, z->pLeft);
+		TNode* y = nullptr;
+		Color yOriginalColor = z->color;
+
+		if (z->pLeft == nullptr || z->pRight == nullptr) {
+			y = z;
 		}
 		else {
-			y = MinimumNode(z->pRight);
-			yOriginalColor = y->isRed;
+			y = z->pRight;
+			while (y->pLeft != nullptr) {
+				y = y->pLeft;
+			}
+		}
+		if (y->pLeft != nullptr) {
+			x = y->pLeft;
+		}
+		else {
 			x = y->pRight;
-			if (y->pParent == z) {
-				x->pParent = y;
+		}
+		if (x != nullptr) {
+			x->pParent = y->pParent;
+		}
+		if (y->pParent == nullptr) {
+			pRoot = x;
+		}
+		else {
+			if (y == y->pParent->pLeft) {
+				y->pParent->pLeft = x;
 			}
 			else {
-				Transplant(y, y->pRight);
-				y->pRight = z->pRight;
-				y->pRight->pParent = y;
+				y->pParent->pRight = x;
 			}
-			Transplant(z, y);
-			y->pLeft = z->pLeft;
-			y->pLeft->pParent = y;
-			y->isRed = z->isRed;
 		}
-		if (yOriginalColor == false) {
+		if (y != z) {
+			z->data = y->data;
+		}
+		if (yOriginalColor == BLACK && x != nullptr) {
 			FixDelete(x);
 		}
-		delete z;
+		else if (yOriginalColor == BLACK) {
+			FixDelete(y->pParent);
+		}
+		delete y;
 	}
+
 };
