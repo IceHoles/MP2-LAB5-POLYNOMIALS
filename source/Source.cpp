@@ -1,7 +1,101 @@
 #include "list.h"
-#include "polynomial.h"
+#include "polynomial.h"		  
+#include "hash_list.h"
+#include "ordered_table.h"
+#include "parsers.h"
+#include "tree_rb.h"
+#include <iostream>
+#include <map>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <algorithm>
+#include <cctype>
 
 int main() {
-	//polynomial abc = { {1, 0, 0, 0}, {1, 1, 0, 0}, {2, 1, 0, 0}, {3, 1, 0, 0}, {12, 0, 1, 0}, {14, 0, 0, 1}, {23, 1, 1, 0}, {43, 1, 1, 1} };
-	return 0;
+    std::map<std::string, polynomial> polynomials;
+
+    while (true) {
+        std::cout << "Enter a command (add, expression, integ, diff, value, print, exit): ";
+        std::string command;
+        std::getline(std::cin, command);
+
+        if (command == "add") {
+            std::cout << "Enter the polynomial as a string: ";
+            std::string polynomialString;
+            std::getline(std::cin, polynomialString);
+
+            parse_polynomial(polynomialString, polynomials);
+            std::cout << "Polynomial added." << std::endl;
+        }
+        else if (command == "expression") {
+            std::cout << "Enter the expression as a string: ";
+            std::string expression;
+            std::getline(std::cin, expression);
+
+            polynomial result = parse_expression(expression, polynomials);
+            std::cout << "Result: " << result << std::endl;
+        }
+        else if (command == "integ") {
+            std::cout << "Enter the name of the polynomial to integrate: ";
+            std::string name;
+            std::getline(std::cin, name);
+
+            std::cout << "Enter the variable to integrate (h): ";
+            char h;
+            std::cin >> h;
+
+            polynomial& p = polynomials[name];
+            p = p.integ(h);
+            std::cout << "Polynomial integrated." << std::endl;
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+        else if (command == "diff") {
+            std::cout << "Enter the name of the polynomial to differentiate: ";
+            std::string name;
+            std::getline(std::cin, name);
+
+            std::cout << "Enter the variable to differentiate (h): ";
+            char h;
+            std::cin >> h;
+
+            polynomial& p = polynomials[name];
+            p = p.diff(h);
+            std::cout << "Polynomial differentiated." << std::endl;
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+        else if (command == "value") {
+            std::cout << "Enter the name of the polynomial: ";
+            std::string name;
+            std::getline(std::cin, name);
+
+            std::cout << "Enter the value of x: ";
+            double x;
+            std::cin >> x;
+
+            std::cout << "Enter the value of y: ";
+            double y;
+            std::cin >> y;
+
+            std::cout << "Enter the value of z: ";
+            double z;
+            std::cin >> z;
+
+            const polynomial& p = polynomials[name];
+            double result = p.value(x, y, z);
+            std::cout << "Result: " << result << std::endl;
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+        else if (command == "print") {
+            print_polynomials(polynomials);
+        }
+        else if (command == "exit") {
+            break;
+        }
+        else {
+            std::cout << "Invalid command. Please try again." << std::endl;
+        }
+    }
+
+    return 0;
 }

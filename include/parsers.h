@@ -17,7 +17,7 @@ bool is_number(const std::string& s) {
     return !s.empty() && all_of(s.begin(), s.end(), ::isdigit);
 }
 
-std::map<std::string, polynomial> parse_polynomial(const std::string& s) {
+polynomial parse_polynomial(const std::string& s, std::map<std::string, polynomial>& polynomials) {
     std::map<std::string, polynomial> result;
     std::regex pattern_equation("(\\w+)\\s*=\\s*(.*)");
     std::smatch match_eq;
@@ -59,8 +59,8 @@ std::map<std::string, polynomial> parse_polynomial(const std::string& s) {
             }
             p.add_monomial(monomial(coef, a, b, c));
         }
-        result[name] = p;
-        return result;
+        polynomials[name] = p;
+        return p;
     }
     else throw std::invalid_argument("Invalid input");
 }

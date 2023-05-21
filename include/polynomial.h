@@ -2,6 +2,7 @@
 #include "list.h"
 #include <cmath>
 #include <iostream>
+#include <map>
 
 
 class monomial {
@@ -11,7 +12,7 @@ public:
 	monomial() :coef(1), a(0), b(0), c(0) {};
 	monomial(double coef1, int a1, int b1, int c1) : coef(coef1), a(a1), b(b1), c(c1) {};
 
-	double value(double x, double y, double z) {
+	double value(double x, double y, double z) const {
 		return coef * (pow(x, a) * pow(y, b) * pow(z, c));
 	};
 
@@ -192,6 +193,14 @@ public:
 		return 1;
 	};
 
+	double value(const double x, const double y, const double z) const {
+		double res = 0;
+		for (auto m : pol) {
+			res += m.value(x, y, z);
+		}
+		return res;
+	}
+
 	polynomial operator+(const polynomial& rp) const {
 		polynomial res = pol.merge_sorted_lists(rp.pol);
 		Node<monomial>* tmp = res.pol.get_first();
@@ -284,5 +293,40 @@ public:
 			dividend = div.pol.front();
 		} 
 		return quotient;
+	}
+
+	friend void print_polynomials(const std::map<std::string, polynomial>& polynomials) {
+		std::cout << "Existing polynomials:" << std::endl;
+		for (const auto& entry : polynomials) {
+			std::cout << entry.first << ": " << entry.second << std::endl;
+		}
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, const polynomial& p) {
+		os << "Polynomial: ";
+		// Print the terms of the polynomial
+		for (auto it = p.pol.begin(); it != p.pol.end();) {
+			const monomial& term = *it;
+			if (term.coef != 1) {
+				if (term.coef == -1) {
+					os << ' - ';
+				}
+				else os << term.coef;	
+			} 
+			if (term.a != 0) {
+				if (term.a == 1) os << "x"; else os << "x^" << term.a;
+			}  
+			if (term.b != 0) {
+				if (term.b == 1) os << "y"; else os << "y^" << term.b;
+			}
+			if (term.c != 0) {
+				if (term.c == 1) os << "z"; else os << "z^" << term.c;
+			}
+			++it;
+			if (it != p.pol.end() && (*it).coef > 0) {
+				os << " + ";
+			}
+		}
+		return os;
 	}
 };

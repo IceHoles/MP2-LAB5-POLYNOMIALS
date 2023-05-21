@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <sstream>	  
 
 	//  This implementation includes the `Insert` function to insert a key - value pair into the tree, 
 	//  as well as the `FixInsert` function to balance the tree according to Red - Black Tree rules.
@@ -294,5 +295,4 @@ public:
 		}
 		delete y;
 	}
-
 };
