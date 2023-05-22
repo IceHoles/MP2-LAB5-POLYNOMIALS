@@ -2,12 +2,6 @@
 #include <iostream>
 #include <sstream>	  
 
-	//  This implementation includes the `Insert` function to insert a key - value pair into the tree, 
-	//  as well as the `FixInsert` function to balance the tree according to Red - Black Tree rules.
-	//  It also includes the `RotateLeft` and `RotateRight` functions to perform left and right rotations, respectively.
-	//	Finally, it includes the `InorderTraversal` function to traverse the tree in - order and print out the key - value pairs.
-	//	Note that this implementation assumes that the `TKey` type has an overloaded `<` operator for comparison.
-
 enum Color { RED, BLACK };
 
 template <typename TKey, typename TValue>
@@ -75,7 +69,7 @@ class TSearchTreeTab1e {
 	void InorderTraversalHelper(TNode* pNode, std::stringstream& ss) {
 		if (pNode != nullptr) {
 			InorderTraversalHelper(pNode->pLeft, ss);
-			ss << pNode->data.key << ": " << pNode->data.value << "\n";
+			ss << pNode->data.key << " = " << pNode->data.value << std::endl;
 			InorderTraversalHelper(pNode->pRight, ss);
 		}
 	}
@@ -236,20 +230,22 @@ public:
 		FixInsert(z);
 	}
 
-	//void InorderTraversal() {
-	//	InorderTraversalHelper(pRoot);
-	//}
-
 	std::stringstream InorderTraversal() {
 		std::stringstream ss;
 		InorderTraversalHelper(pRoot, ss);
 		return ss;
 	}
 
+	void print() {
+		std::stringstream ss;
+		InorderTraversalHelper(pRoot, ss);
+		std::cout << "tree contains: " << std::endl << ss.str();
+	}
+
 	void Delete(const TKey& key) {
 		TNode* z = FindNode(key,pRoot);
 		if (z == nullptr) {
-			return; // key not found, nothing to delete
+			return;
 		}
 		TNode* x = nullptr;
 		TNode* y = nullptr;

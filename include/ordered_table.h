@@ -34,10 +34,17 @@ public:
 		auto comp = [](const TTab1eRec& r, const TKey& k) { return r.key < k; };
 		auto it = std::lower_bound(data.begin(), data.end(), key, comp);
 		if (it != data.end() && it->key == key) {
-			it->value = value;  // Update value of existing element
+			it->value = value;
 		}
 		else {
-			data.insert(it, { key, value });  // Insert new element
+			data.insert(it, { key, value });
+		}
+	}
+
+	void print() {
+		std::cout << "table contains :" << std::endl;
+		for (auto it : data) {
+			std::cout << it.key << " = " << it.value << std::endl;
 		}
 	}
 };

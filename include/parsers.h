@@ -17,7 +17,7 @@ bool is_number(const std::string& s) {
     return !s.empty() && all_of(s.begin(), s.end(), ::isdigit);
 }
 
-polynomial parse_polynomial(const std::string& s, std::map<std::string, polynomial>& polynomials) {
+polynomial parse_polynomial(const std::string& s, std::map<std::string, polynomial>& polynomials, std::string& pname) {
     std::map<std::string, polynomial> result;
     std::regex pattern_equation("(\\w+)\\s*=\\s*(.*)");
     std::smatch match_eq;
@@ -28,10 +28,7 @@ polynomial parse_polynomial(const std::string& s, std::map<std::string, polynomi
         std::regex pattern_monomial("([+-]?[^-+]+)");
         std::sregex_iterator it(value.begin(), value.end(), pattern_monomial);
         std::sregex_iterator end;
-        //if (value[0] != '+' && value[0] != '-') {    // not sure if that catches unsigned monomial case
-        //    monomials.push_back((*it).str());
-        //    ++it;
-        //}
+
         while (it != end) {
             monomials.push_back((*it).str());
             ++it;
@@ -60,6 +57,7 @@ polynomial parse_polynomial(const std::string& s, std::map<std::string, polynomi
             p.add_monomial(monomial(coef, a, b, c));
         }
         polynomials[name] = p;
+        pname = name;
         return p;
     }
     else throw std::invalid_argument("Invalid input");
@@ -123,7 +121,7 @@ polynomial parse_expression(const std::string& s, std::map<std::string, polynomi
     if (pos == std::string::npos) {
         throw std::invalid_argument("Invalid expression: Missing equals sign '='");
     }
-    // Extract the result polynomial name
+
     std::string result_name = expr.substr(0, pos);
     if (result_name.empty()) {
         throw std::invalid_argument("Invalid expression: Missing result polynomial name");

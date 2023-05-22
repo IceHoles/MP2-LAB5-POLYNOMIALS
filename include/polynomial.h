@@ -303,15 +303,13 @@ public:
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const polynomial& p) {
-		os << "Polynomial: ";
-		// Print the terms of the polynomial
 		for (auto it = p.pol.begin(); it != p.pol.end();) {
 			const monomial& term = *it;
 			if (term.coef != 1) {
 				if (term.coef == -1) {
-					os << ' - ';
+					os << " - ";
 				}
-				else os << term.coef;	
+				else os << ' ' << term.coef;
 			} 
 			if (term.a != 0) {
 				if (term.a == 1) os << "x"; else os << "x^" << term.a;

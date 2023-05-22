@@ -64,6 +64,6 @@ protected:
 TEST_F(TSearchTreeTab1eTest1, DeleteKey) {
     tree.Delete(5);
     std::stringstream output = tree.InorderTraversal();
-    std::string expectedOutput = "3: Value 3\n7: Value 7\n10: Value 10\n12: Value 12\n15: Value 15\n18: Value 18\n";
+    std::string expectedOutput = "3 = Value 3\n7 = Value 7\n10 = Value 10\n12 = Value 12\n15 = Value 15\n18 = Value 18\n";
     EXPECT_EQ(output.str(), expectedOutput);
 }

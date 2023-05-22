@@ -14,6 +14,9 @@
 
 int main() {
     std::map<std::string, polynomial> polynomials;
+    TOrderedTab1e<std::string, polynomial> table;
+    TSearchTreeTab1e<std::string, polynomial> tree;
+    THashTab1e<std::string, polynomial> hash;
 
     while (true) {
         std::cout << "Enter a command (add, expression, integ, diff, value, print, exit): ";
@@ -24,8 +27,12 @@ int main() {
             std::cout << "Enter the polynomial as a string: ";
             std::string polynomialString;
             std::getline(std::cin, polynomialString);
+            std::string name;
 
-            parse_polynomial(polynomialString, polynomials);
+            polynomial p = parse_polynomial(polynomialString, polynomials, name);
+            table.Insert(name, p);
+            tree.Insert(name, p);
+            hash.insert(name, p);
             std::cout << "Polynomial added." << std::endl;
         }
         else if (command == "expression") {
@@ -88,6 +95,9 @@ int main() {
         }
         else if (command == "print") {
             print_polynomials(polynomials);
+            table.print();
+            tree.print();
+            hash.print();
         }
         else if (command == "exit") {
             break;
