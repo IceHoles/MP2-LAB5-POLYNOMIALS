@@ -20,6 +20,7 @@ struct Node {
 template <typename T>
 class List {
 	Node<T>* first = nullptr;
+	Node<T>* last = nullptr;
 public:
 	class iterator {				 //made an iterator and never used it im scared idk how to work with them
 
@@ -29,8 +30,8 @@ public:
 
 		iterator() {};
 
-		iterator(Node<T>* data) {
-			ptr = data;
+		iterator(Node<T>* p) {
+			ptr = p;
 		};
 
 		iterator& operator++() {
@@ -52,7 +53,7 @@ public:
 		};
 
 		bool operator==(const iterator& it2) {
-			return !(this != it2);
+			return !(*this != it2);
 		};
 
 		T& operator*() {
@@ -64,11 +65,11 @@ public:
 		};
 	};
 
-	iterator begin() {
-		return first;
+	 iterator begin() const {
+		return iterator(first);
 	};
 
-	iterator end() {
+	 iterator end() const {
 		return nullptr;
 	};
 
@@ -77,27 +78,28 @@ public:
 		auto it = first;
 		for (int i = 1; i < count; i++) {
 			it->next = new Node<T>();
+			last = it;
 			it = it->next;
 		}
 	};
 
 	List() :first(nullptr) {}
 
-	List(const List& list) {
+	List(const List<T>& list) {
 		Node<T>* lptr = list.first;
 		if (!list.first)
 			return;
 		first = new Node<T>(lptr->elem);
-		lptr = lptr->next;
-		Node<T>* tmp = first;
+		last = first;
+		lptr = lptr->next;	   
 		while (lptr) {
-			tmp->next = new Node<T>(lptr->elem);
-			lptr = lptr->next;
-			tmp = tmp->next;
+			last->next = new Node<T>(lptr->elem);
+			last = last->next;
+			lptr = lptr->next; 
 		}
 	};
 
-	List(List&& list) {
+	List(List&& list) noexcept {
 		this->first = list.first;
 		list.first = nullptr;
 	};
@@ -108,9 +110,8 @@ public:
 
 	List(const std::initializer_list<T>& list) {
 		for (auto it = list.begin(); it != list.end(); ++it) {
-			push_front(*it);
-		}
-		this->reverse();
+			push_back(*it);
+		}				
 	};
 
 	~List() {
@@ -126,16 +127,27 @@ public:
 		if (this == &list) return *this;
 		List copy(list);
 		this->clear();
-		this->first = copy.first;
+		first = copy.first;
+		last = copy.last;
+		copy.first = nullptr;
+		copy.last = nullptr;
 		return *this;
 	};
 
-	List& operator=(List&& list) {
+	List& operator=(List&& list) noexcept {
 		Node<T>* tmp = list.first;
 		list.first = this->first;
 		this->first = tmp;
 		return *this;
 	};
+
+	T& operator[](size_t n) const {
+		Node<T>* it = first;
+		for (int i = 0; i < n; i++) {
+			it = it->next;
+		}
+		return it->elem;
+	}
 
 	T& operator[](size_t n) {
 		Node<T>* it = first;
@@ -145,29 +157,51 @@ public:
 		return it->elem;
 	}
 
+	bool operator==(const List& rlist) const{
+		Node<T>* l = first;
+		Node<T>* r = rlist.first;
+		while (l && r) {
+			if (l->elem != r->elem) return 0;
+			l = l->next;
+			r = r->next;
+		}
+		if (l == nullptr && r == nullptr) return 1;
+		return 0;
+	}
+
 	bool empty() const {
 		if (!first)
 			return false;
 		return true;
 	};
 
-	size_t size() {
+	size_t size() const {
 		Node<T>* tmp = first;
 		size_t count = 0;
 		while (tmp) {
-			Node<T>* tmp2 = tmp->next;
+			tmp = tmp->next;
 			count++;
-			tmp = tmp2;
 		}
 		return count;
 	};
 
-	Node<T>* get_first() { return this->first; }
+	Node<T>* get_first() const { return this->first; }
+
+	Node<T>* get_last() const { return this->last; }
 
 	Node<T>* get_node(size_t pos) {
 		Node<T>* tmp = first;
 		for (int i = 0; i < pos; i++) tmp = tmp->next;
 		return tmp;
+	}
+
+	void pop_front() {
+		if (first) {
+			Node<T>* tmp = first;
+			if (last == first) last = nullptr;
+			first = first->next;
+			delete tmp;
+		}
 	}
 
 	void clear() {
@@ -178,6 +212,7 @@ public:
 			tmp = tmp2;
 		}
 		first = nullptr;
+		last = nullptr;
 	};
 
 	void erase_after(Node<T>* prev) {
@@ -188,21 +223,43 @@ public:
 		}
 	};
 
-	void merge(List& list) {
-		Node<T>* tmp = this->first;
-		Node<T>* tmp2 = nullptr;
-		while (tmp) {
-			tmp2 = tmp;
-			tmp = tmp->next;
+	void erase(Node<T>* curr) {
+		Node<T>* tmp = first; 
+		if (curr->next) {
+			while (tmp->next != curr) {
+				tmp = tmp->next;
+			}
+			curr->next = curr->next->next;
+			delete curr;
 		}
-		if (tmp2) {
-			tmp2->next = list.first;
-			list.first = nullptr;
+		else if (tmp->next) {
+			while (tmp->next != curr) {
+				tmp = tmp->next;
+			}
+			last = tmp;
+			tmp->next = nullptr;
+			delete curr;
 		}
 		else {
-			first = list.first;
-			list.first = nullptr;
+			first = nullptr;
+			last = nullptr;
+			delete curr;
 		}
+	};
+
+	List merge(const List& list) const {
+		List res(*this);
+		List temp(list);
+		if (res.last) {
+			res.last->next = temp.first;
+			temp.first = nullptr;
+		}
+		else {
+			res.first = temp.first;
+			temp.first = nullptr;
+		}  
+		temp.first = temp.last = nullptr;
+		return res;
 	};
 
 	//void sort();		// O(n log n)	merge sort task12
@@ -213,12 +270,21 @@ public:
 		prev->next = new Node<T>();
 		prev->next->elem = value;
 		prev->next->next = tmp;
+		if (prev == last) last = last->next;
 	};
 
 	void push_front(T value) {
 		Node<T>* tmp = new Node<T>(value);
 		tmp->next = first;
 		first = tmp;
+	}
+
+	void push_back(T value) {
+		if (last) {
+			last->next = new Node<T>(value);
+			last = last->next;
+		}
+		else first = last = new Node<T>(value);
 	}
 
 	void reverse() {
@@ -242,6 +308,10 @@ public:
 		std::cout << std::endl;
 		this->reverse;
 	};
+
+	T front() const { return first->elem; }
+
+	T front() { return first->elem; }
 
 	std::vector<T> middle() {
 		Node<T>* tmp1 = first;
@@ -298,39 +368,35 @@ public:
 		Node<T>* ptr1 = first;
 		Node<T>* ptr2 = list.first;
 		while (ptr1 && ptr2) {
-			if (ptr1->elem <= ptr2->elem) {
-				l.push_front(ptr1->elem);
+			if (ptr1->elem >= ptr2->elem) {
+				l.push_back(ptr1->elem);
 				ptr1 = ptr1->next;
 			}
 			else {
-				l.push_front(ptr2->elem);
+				l.push_back(ptr2->elem);
 				ptr2 = ptr2->next;
 			}
 		}
 		while (ptr2) {
-			l.push_front(ptr2->elem);
+			l.push_back(ptr2->elem);
 			ptr2 = ptr2->next;
 		}
 		while (ptr1) {
-			l.push_front(ptr1->elem);
+			l.push_back(ptr1->elem);
 			ptr1 = ptr1->next;
 		}
-		l.reverse();
 		return l;
 	};
 
 	void sorted_insert(T value) {
 		if (first != nullptr) {
 			Node<T>* tmp = first;
-			auto tmp2 = tmp;
-			while (tmp->elem < value) {
-				tmp2 = tmp;
+			while (tmp != last && tmp->elem < value) {
 				tmp = tmp->next;
-			}
-			tmp2->next = new Node<T>(value);
-			tmp2->next->next = tmp;
+			}			 
+			insert_after(tmp, value);
 		}
-		else push_front(value);
+		else push_back(value);
 	}
 
 	void erase_last_duplicate(T value) {
@@ -424,41 +490,6 @@ public:
 		}
 	}
 
-	void add_integer(int number) {
-		this->reverse();
-		Node<T>* tmp = first;
-		int overflow = 0;
-		while (tmp) {
-			tmp->elem += (number % 10) + overflow;
-			overflow = 0;
-			number /= 10;
-			if (tmp->elem > 9) {
-				tmp->elem %= 10;
-				overflow++;
-			}
-			tmp = tmp->next;
-		}
-		this->reverse();
-		if (overflow > 0) push_front(1);
-	}
-
-	List<int> multiply_integer(int number) {
-		List<int> result;
-		Node<T>* tmp = first;
-		int listnumber = 0;
-		while (tmp) {
-			listnumber *= 10;
-			listnumber += tmp->elem;
-			tmp = tmp->next;
-		}
-		listnumber *= number;
-		while (listnumber > 0) {
-			result.push_front(listnumber % 10);
-			listnumber /= 10;
-		}
-		return result;
-	}
-
 	void print() {
 		auto tmp = first;
 		while (tmp) {
@@ -469,6 +500,7 @@ public:
 	}
 
 	void merge_sort() {
+		if (!first) return;
 		if (!first->next) return;
 		else {
 			Node<T>* center = first;
@@ -484,127 +516,14 @@ public:
 			merge_sort();
 			rightList.merge_sort();
 			*this = merge_sorted_lists(rightList);
+			last = first;
+			while (last->next) last = last->next;
 		}
 	};
-
-	Node<T>* find_loop_start() {
-		Node<T>* slow = first;
-		Node<T>* fast = first;
-		while (fast && fast->next) {
-			slow = slow->next;
-			fast = fast->next->next;
-			if (slow == fast) break;
-		}
-		if (fast || slow) throw std::invalid_argument("This list has no loop");
-		slow = first;
-		while (slow != fast) {
-			slow = slow->next;
-			fast = fast->next;
-		}
-		return slow;
-	}
-
 	void node_print(Node<T>* nod) {
 		Node<T>* tmp = nod;
 		while (tmp) {
 			std::cout << tmp->elem << ' ';
-			tmp = tmp->next;
-		}
-		std::cout << std::endl;
-	}
-};
-
-
-
-
-class ListList {
-public:
-	struct NNode {
-		NNode* data;
-		NNode* next;
-		int num;
-		NNode() {
-			next = nullptr;
-			data = nullptr;
-			num = 0;
-		}
-	};
-	NNode* first = nullptr;
-	ListList() {};
-	ListList(size_t n) {
-		first = new NNode();
-		NNode* tmp = first;
-		for (int i = 1; i < n; i++) {
-			tmp->num = i;
-			tmp->next = new NNode();
-			tmp = tmp->next;
-		}
-	}
-	~ListList() {
-		NNode* tmp = first;
-		auto tmp2 = tmp;
-		while (tmp) {
-			tmp2 = tmp->next;
-			delete tmp;
-			tmp = tmp2;
-		}
-	}
-	NNode* get_node(size_t pos) {
-		NNode* tmp = first;
-		for (int i = 0; i < pos; i++) {
-			tmp = tmp->next;
-		}
-		return tmp;
-	}
-	ListList(ListList& list) {
-		if (list.first == nullptr) throw std::invalid_argument("List is empty");
-		if (list.first->next == nullptr) {
-			first = new NNode();
-			if (list.first->data)first->data = first;
-		} // list is 1 in length, no need to copy anything except first element and data pointer
-		else {
-			NNode* tmp = list.first;
-			while (tmp != nullptr) {
-				NNode* tmp3 = tmp->next;
-				tmp->next = new NNode();  		 // creating new nodes to copy original list
-				tmp->next->num = tmp->num;		 // copying all elements (essentially making list 0123->00112233)
-				tmp->next->next = tmp3;
-				tmp = tmp3;
-			}
-
-			tmp = list.first;
-			while (tmp) {
-				tmp->next->data = tmp->data->next;
-				tmp = tmp->next->next;				// copying data pointer of the original list to the data pointer of copied list shifted 1 to right, where all newly created nodes are
-			}
-
-			tmp = list.first;
-			first = tmp->next;
-			NNode* tmp1 = first;
-			while (tmp->next->next) {
-				tmp->next = tmp1->next;			//dividing list in two - original stays untouched and copy retains the structure of original
-				tmp = tmp->next;
-				tmp1->next = tmp->next;
-				tmp1 = tmp1->next;
-			}
-			tmp->next = tmp1->next;			//dividing list in two - original stays untouched and copy retains the structure of original
-			tmp1->next = nullptr;
-		}
-	}
-
-	void print() {
-		NNode* tmp = first;
-		while (tmp) {
-			std::cout << tmp->num << ' ';
-			tmp = tmp->next;
-		}
-		std::cout << std::endl;
-	}
-
-	void print_data() {
-		NNode* tmp = first;
-		while (tmp) {
-			std::cout << tmp->data->num << ' ';
 			tmp = tmp->next;
 		}
 		std::cout << std::endl;
